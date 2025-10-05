@@ -54,3 +54,4 @@ This project is great for:
 - Customizing with your own "household items"
 
 Feel free to adapt and expand it!
+💜~
