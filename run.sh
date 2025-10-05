@@ -17,7 +17,7 @@ Arguments:
   PATH              Root folder where the structure will be created (default: house)
 
 If no actions are given, defaults to -br (build & replace).
-For run from GitHub repository use:
+To run directly from the GitHub repository, use
   bash <(wget -qO- https://raw.githubusercontent.com/sjornetc/filenest/main/run.sh) [OPTIONS] [PATH]
 
 
