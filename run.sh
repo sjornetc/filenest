@@ -29,7 +29,7 @@ EOF
 }
 
 ARGS=$(getopt -o bdrh -l build,delete,replace,help -- "$@") || {
-  echo "Invalid parameters. Use -h for help." >&2
+  echo "filenest: Invalid parameters. Use -h for help." >&2
   exit 1
 }
 eval set -- "$ARGS"
@@ -46,15 +46,20 @@ while true; do
     -r|--replace) replace=true; shift ;;
     -h|--help) show_help; exit 0 ;;
     --) shift; break ;;
-    *) echo "Unknown option: $1" >&2; exit 1 ;;
+    *) echo "filenest: Unknown option: $1" >&2; exit 1 ;;
   esac
 done
 
-if [[ -n "$1" ]]; then
+if [[ $# -gt 1 ]]; then
+  echo "filenest: Only one path argument is allowed." >&2
+  echo "Use -h for help." >&2
+  exit 1
+elif [[ -n "$1" ]]; then
   root="$1"
 else
   root="house"
 fi
+
 
 if "$delete"; then
   if [[ -d "$root" ]]; then
@@ -72,7 +77,7 @@ if "$build"; then
       rm -rf "$root"
       mkdir -p "$root"
     else
-      echo "Error: folder '$root' already exists. Use -r to replace it."
+      echo "filenest: Folder '$root' already exists. Use -r to replace it."
       exit 1
     fi
   else
