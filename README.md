@@ -28,7 +28,7 @@ This project was designed as a teaching tool to introduce learners to basic GNU/
 filenest [OPTIONS] [PATH]
 ```
 
-For run from GitHub repository use:
+To run directly from the GitHub repository, use:
 
 ``` bash
 bash <(wget -qO- https://raw.githubusercontent.com/sjornetc/filenest/main/run.sh) [OPTIONS] [PATH]
