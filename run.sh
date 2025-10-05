@@ -3,7 +3,7 @@ set -e
 
 show_help() {
 cat <<'EOF'
-Usage: house.sh [OPTIONS] [PATH]
+Usage: filenest [OPTIONS] [PATH]
 
 Creates or deletes a folder and file structure simulating a house.
 
@@ -16,12 +16,15 @@ Options:
 Arguments:
   PATH              Root folder where the structure will be created (default: house)
 
-If no parameters are given, defaults to -br (build & replace).
+If no actions are given, defaults to -br (build & replace).
+For run from GitHub repository use:
+  bash <(wget -qO- https://raw.githubusercontent.com/sjornetc/filenest/main/run.sh) [OPTIONS] [PATH]
+
 
 Examples:
-  house.sh -b                  → build the house in ./house (error if exists)
-  house.sh -br ~/projects/home → rebuild the house there
-  house.sh -d                  → delete ./house
+  filenest -b                  → build the house in ./house (error if exists)
+  filenest -br ~/projects/home → rebuild the house there
+  filenest -d                  → delete ./house
 EOF
 }
 
