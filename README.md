@@ -24,13 +24,17 @@ This project was designed as a teaching tool to introduce learners to basic GNU/
 
 ## Usage
 
-Run the setup script:
-
-```bash
-wget -qO- https://raw.githubusercontent.com/sarajornet/filenest/main/build_house.sh | bash
+```txt
+filenest [OPTIONS] [PATH]
 ```
 
-You’ll end up with a fully structured file “house” you can navigate and manipulate using regular shell commands like `ls`, `cd`, `cat`, `mv`, `rm`, etc.
+For run from GitHub repository use:
+
+``` bash
+bash <(wget -qO- https://raw.githubusercontent.com/sjornetc/filenest/main/run.sh) [OPTIONS] [PATH]
+```
+
+If no options or path are provided, the script will generate a fully structured file "casa" that you can navigate and manipulate using standard shell commands such as `ls`, `cd`, `cat`, `mv`, `rm`, etc.
 
 ## Included Tools
 
