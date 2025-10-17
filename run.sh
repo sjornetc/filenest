@@ -14,17 +14,19 @@ Options:
   -h, --help        Show this help and exit
 
 Arguments:
-  PATH              Root folder where the structure will be created (default: house)
+  PATH              Root folder where the structure will be created (default:
+                    ./)
 
 If no actions are given, defaults to -br (build & replace).
 To run directly from the GitHub repository, use
-  bash <(wget -qO- https://raw.githubusercontent.com/sjornetc/filenest/main/run.sh) [OPTIONS] [PATH]
+  bash <(curl -s https://raw.githubusercontent.com/sjornetc/filenest/main/run.sh)
+    [OPTIONS] [PATH]
 
 
 Examples:
-  filenest -b                  → build the house in ./house (error if exists)
-  filenest -br ~/projects/home → rebuild the house there
-  filenest -d                  → delete ./house
+  filenest -b                  → build the house in ./ (error if already exists)
+  filenest -br ~/projects/home → rebuild the house in ~/projects/home
+  filenest -d                  → delete ./
 EOF
 }
 
@@ -55,29 +57,60 @@ if [[ $# -gt 1 ]]; then
   echo "Use -h for help." >&2
   exit 1
 elif [[ -n "$1" ]]; then
-  root="$1"
+  root="${1%/}/"
 else
-  root="house"
+  root="./"
 fi
+
+
+
+##############
+## Settings ##
+##############
+
+rooms_dir=".rooms/"
+
+
+
+rooms="$root/$rooms_dir/"
+
+
+###########
+## Setup ##
+###########
 
 
 if "$delete"; then
-  if [[ -d "$root" ]]; then
-    rm -rf "$root"
-    echo "Folder '$root' deleted."
+  dest=$(readlink -f -- "$root/casa" 2>/dev/null) || dest=""
+  prefix="$(realpath -- "$root")/"
+  if [[ -L "$root/casa" \
+    &&  -n "$dest" \
+    &&  "$dest" == "$prefix"* \
+    &&  "${dest#"$prefix"}" =~ ^[^/]+/rebedor/?$ ]]; then
+      rm -rf -- "$(dirname -- "$dest")"
+      rm -f -- "$root/casa"
+      exit 0
   else
-    echo "Folder '$root' does not exist."
+      echo "filenest: No valid 'casa' was found in '$root'." >&2
+      exit 1
   fi
-  exit 0
 fi
 
 if "$build"; then
-  if [[ -d "$root" ]]; then
+  if [[ -e "$root/casa" ]]; then
     if "$replace"; then
-      rm -rf "$root"
-      mkdir -p "$root"
+      if [[ -L "$root/casa" ]]; then
+        dest=$(readlink -f -- "$root/casa" 2>/dev/null) || dest=""
+        if [[ -n "$dest" ]]; then
+          rm -rf -- "$(dirname -- "$dest")"
+        fi
+        rm -f -- "$root/casa"
+      else
+        echo "filenest: '$root/casa' already exists and it is not a filenest 'casa'"
+        exit 1
+      fi
     else
-      echo "filenest: Folder '$root' already exists. Use -r to replace it."
+      echo "filenest: '$root/casa' already exists. Use -r to replace it."
       exit 1
     fi
   else
@@ -87,39 +120,71 @@ else
   mkdir -p "$root"
 fi
 
+
+##############
+## Building ##
+##############
+
+mkdir "$rooms"
+
+
+
+
 ##########
 ## Hall ##
 ##########
 
-mkdir "$root/rebedor"
+mkdir "$rooms/rebedor"
 
-echo "🪞" > "$root/rebedor/mirall.txt"
-echo "🏙" > "$root/rebedor/quadre_ciutat.txt"
+echo "🪞" > "$rooms/rebedor/mirall.txt"
+echo "🏙" > "$rooms/rebedor/quadre_ciutat.txt"
 
-echo "echo -n \"🕰 \";date -u +%I:%M:%S" > "$root/rebedor/rellotge_de_paret.sh"
-chmod +x "$root/rebedor/rellotge_de_paret.sh"
+echo "echo -n \"🕰 \";date -u +%I:%M:%S" > "$rooms/rebedor/rellotge_de_paret.sh"
+chmod +x "$rooms/rebedor/rellotge_de_paret.sh"
 
 # Cadira
-mkdir "$root/rebedor/cadira"
+mkdir "$rooms/rebedor/cadira"
 
 # Test
-mkdir "$root/rebedor/test"
-echo "🪴" > "$root/rebedor/test/planta_poto.txt"
+mkdir "$rooms/rebedor/test"
+echo "🪴" > "$rooms/rebedor/test/planta_poto.txt"
+
+# Quadre elèctric
+mkdir "$rooms/rebedor/quadre_electric"
+cat <<'EOF' > "$rooms/rebedor/quadre_electric/rm.sh"
+#!/bin/bash
+echo $(dirname -- $(dirname -- $(dirname -- $(readlink $0))))
+EOF
+
+chmod +x "$rooms/rebedor/quadre_electric/rm.sh"
+
+# Penja-robes
+mkdir       "$rooms/rebedor/penjarobes"
+echo "🧥" > "$rooms/rebedor/penjarobes/jaqueta_negra.txt"
+echo "🧥" > "$rooms/rebedor/penjarobes/jaqueta_marro.txt"
+echo "🧥" > "$rooms/rebedor/penjarobes/jaqueta_blava.txt"
+echo "👒" > "$rooms/rebedor/penjarobes/barret_negre.txt"
+echo "👒" > "$rooms/rebedor/penjarobes/barret_vermell.txt"
+echo "👒" > "$rooms/rebedor/penjarobes/barret_blau.txt"
+mkdir "$rooms/rebedor/penjarobes/bossa_marro"
+echo "🌂" > "$rooms/rebedor/penjarobes/paraigues_blau.txt"
+echo "🌂" > "$rooms/rebedor/penjarobes/paraigues_negre.txt"
+
 
 # Tauleta
-mkdir "$root/rebedor/tauleta"
+mkdir "$rooms/rebedor/tauleta"
 
-echo "🔑" > "$root/rebedor/tauleta/claus.txt"
-echo "💁‍♀️" > "$root/rebedor/tauleta/foto_alice.txt"
-echo "🧑‍🦱" > "$root/rebedor/tauleta/foto_bob.txt"
-echo "👧" > "$root/rebedor/tauleta/foto_clea.txt"
-echo "👩‍👧" > "$root/rebedor/tauleta/foto_alice_clea.txt"
-echo "💃" > "$root/rebedor/tauleta/figureta_flamenca.txt"
-echo "💡" > "$root/rebedor/tauleta/llum_lampareta.txt"
+echo "🔑" > "$rooms/rebedor/tauleta/claus.txt"
+echo "💁‍♀️" > "$rooms/rebedor/tauleta/foto_alice.txt"
+echo "🧑‍🦱" > "$rooms/rebedor/tauleta/foto_bob.txt"
+echo "👧" > "$rooms/rebedor/tauleta/foto_clea.txt"
+echo "👩‍👧" > "$rooms/rebedor/tauleta/foto_alice_clea.txt"
+echo "💃" > "$rooms/rebedor/tauleta/figureta_flamenca.txt"
+echo "💡" > "$rooms/rebedor/tauleta/llum_lampareta.txt"
 
 
 # Calaix 0
-mkdir "$root/rebedor/tauleta/calaix_0"
+mkdir "$rooms/rebedor/tauleta/calaix_0"
 
 for y in $(seq 16 25)
 do
@@ -138,7 +203,7 @@ Consum:             $((90+$RANDOM%40)),$(($RANDOM%999)) kWh
 Preu mitjà energia: €0.178 / kWh
 Cost energia:       €$((90+$RANDOM%40)),$(($RANDOM%99))
 Càrrec fix:         €$((2+$RANDOM%6)),$(($RANDOM%99))
-Altres càrrecs:     €$((12+$RANDOM%6)),$(($RANDOM%99))" > "$root/rebedor/tauleta/calaix_0/factura_electrica_$y-$m.txt"
+Altres càrrecs:     €$((12+$RANDOM%6)),$(($RANDOM%99))" > "$rooms/rebedor/tauleta/calaix_0/factura_electrica_$y-$m.txt"
 
     echo "\
 Factura de l'Aigua
@@ -153,7 +218,7 @@ Consum:             $((90+$RANDOM%40)),$(($RANDOM%999)) l
 Preu mitjà:         €0.178 / l
 Cost                €$((40+$RANDOM%40)),$(($RANDOM%99))
 Càrrec fix:         €$((2+$RANDOM%6)),$(($RANDOM%99))
-Altres càrrecs:     €$((12+$RANDOM%6)),$(($RANDOM%99))" > "$root/rebedor/tauleta/calaix_0/factura_aigua_$y-$m.txt"
+Altres càrrecs:     €$((12+$RANDOM%6)),$(($RANDOM%99))" > "$rooms/rebedor/tauleta/calaix_0/factura_aigua_$y-$m.txt"
   done
 echo "\
 Contracte de l'assegurança
@@ -161,7 +226,7 @@ Contracte de l'assegurança
 Clienta: Alice
 Número factura: F00$y-$RANDOM-$RANDOM
 Número de compte: EB-2547-02
-Any de servei: 20$y" > "$root/rebedor/tauleta/calaix_0/contracte_assegurancza_$y.txt"
+Any de servei: 20$y" > "$rooms/rebedor/tauleta/calaix_0/contracte_assegurancza_$y.txt"
 
 echo "\
 Contracte de l'aigua
@@ -169,7 +234,7 @@ Contracte de l'aigua
 Clienta: Alice
 Número factura: F00$y-$RANDOM-$RANDOM
 Número de compte: EB-2547-02
-Any de servei: 20$y" > "$root/rebedor/tauleta/calaix_0/contracte_aigua_$y.txt"
+Any de servei: 20$y" > "$rooms/rebedor/tauleta/calaix_0/contracte_aigua_$y.txt"
 
 echo "\
 Contracte de l'electricitat
@@ -177,13 +242,13 @@ Contracte de l'electricitat
 Clienta: Alice
 Número factura: F00$y-$RANDOM-$RANDOM
 Número de compte: EB-2547-02
-Any de servei: 20$y" > "$root/rebedor/tauleta/calaix_0/contracte_electricitat_$y.txt"
+Any de servei: 20$y" > "$rooms/rebedor/tauleta/calaix_0/contracte_electricitat_$y.txt"
 
 done
 
 
 
-cat <<'EOF' > "$root/rebedor/tauleta/revista_home_style.txt"
+cat <<'EOF' > "$rooms/rebedor/tauleta/revista_home_style.txt"
 HOME STYLE – Juny 2025
 
 REPORTATGE EXCLUSIU:
@@ -199,10 +264,10 @@ La revista que et transforma el menjador!
 EOF
 
 # Calaix 1
-mkdir "$root/rebedor/tauleta/calaix_1"
+mkdir "$rooms/rebedor/tauleta/calaix_1"
 
 
-cat <<'EOF' > "$root/rebedor/tauleta/calaix_1/contracte_lloguer.txt"
+cat <<'EOF' > "$rooms/rebedor/tauleta/calaix_1/contracte_lloguer.txt"
 Contracte de lloguer
 ================================================================
 Propietari/a:         Un *vuitre* de merda
@@ -229,7 +294,7 @@ Signatures:
                        vaga de lloguers!
 EOF
 
-cat <<'EOF' > "$root/rebedor/tauleta/calaix_1/asseguranca_llar.txt"
+cat <<'EOF' > "$rooms/rebedor/tauleta/calaix_1/asseguranca_llar.txt"
 Assegurança de la llar
 ================================================================
 Companyia: Segurs Catalans, S.A.
@@ -253,7 +318,7 @@ Observacions:
 Inclou cobertura addicional per danys elèctrics.
 EOF
 
-cat <<'EOF' > "$root/rebedor/tauleta/calaix_1/revista_science_today.txt"
+cat <<'EOF' > "$rooms/rebedor/tauleta/calaix_1/revista_science_today.txt"
 SCIENCE TODAY – Abril 2025
 
 GRAN REPORTATGE:
@@ -268,7 +333,7 @@ Altres temes:
 Subscriu-te i descobreix la ciència del futur!
 EOF
 
-cat <<'EOF' > "$root/rebedor/tauleta/calaix_1/revista_gaming_world.txt"
+cat <<'EOF' > "$rooms/rebedor/tauleta/calaix_1/revista_gaming_world.txt"
 GAMING WORLD – Juliol 2025
 
 TEMA DE PORTADA:
@@ -283,7 +348,7 @@ Dins d’aquest número:
 REVIVEIX EL GAMING DE LA TEVA INFÀNCIA
 EOF
 
-cat <<'EOF' > "$root/rebedor/tauleta/calaix_1/revista_cooking_fun.txt"
+cat <<'EOF' > "$rooms/rebedor/tauleta/calaix_1/revista_cooking_fun.txt"
 COOKING FUN – Setembre 2025
 
 PORTADA:
@@ -298,68 +363,55 @@ Continguts:
 CUINAR ÉS JUGAR, I TU EN POTS SER LA PROTA!
 EOF
 
-
-# Penja-robes
-mkdir       "$root/rebedor/penjarobes"
-echo "🧥" > "$root/rebedor/penjarobes/jaqueta_negra.txt"
-echo "🧥" > "$root/rebedor/penjarobes/jaqueta_marro.txt"
-echo "🧥" > "$root/rebedor/penjarobes/jaqueta_blava.txt"
-echo "👒" > "$root/rebedor/penjarobes/barret_negre.txt"
-echo "👒" > "$root/rebedor/penjarobes/barret_vermell.txt"
-echo "👒" > "$root/rebedor/penjarobes/barret_blau.txt"
-echo "👜" > "$root/rebedor/penjarobes/bossa_marro.txt"
-echo "🌂" > "$root/rebedor/penjarobes/paraigues_blau.txt"
-echo "🌂" > "$root/rebedor/penjarobes/paraigues_negre.txt"
-
 ##############
 ## Passadís ##
 ##############
 
-mkdir "$root/passadis"
-echo "🌌" > "$root/passadis/quadre_via_lactea.txt"
-echo "🔳" > "$root/passadis/quadre_quadre_negre_sobre_fons_blanc.txt"
-echo "💡" > "$root/passadis/llum_lampara_de_peu.txt"
+mkdir "$rooms/passadis"
+echo "🌌" > "$rooms/passadis/quadre_via_lactea.txt"
+echo "🔳" > "$rooms/passadis/quadre_quadre_negre_sobre_fons_blanc.txt"
+echo "💡" > "$rooms/passadis/llum_lampara_de_peu.txt"
 
 # Quadre de gossos
-mkdir "$root/passadis/quadre_gossos_jugant_escacs"
-echo "♟" > "$root/passadis/quadre_gossos_jugant_escacs/quadre_gossos_jugant_escacs.txt"
-mkdir "$root/passadis/quadre_gossos_jugant_escacs/quadre_electric"
+mkdir "$rooms/passadis/quadre_gossos_jugant_escacs"
+echo "♟" > "$rooms/passadis/quadre_gossos_jugant_escacs/quadre_gossos_jugant_escacs.txt"
+mkdir "$rooms/passadis/quadre_gossos_jugant_escacs/quadre_electric"
 
 # Test
-mkdir       "$root/passadis/test"
-echo "🪴" > "$root/passadis/test/planta_palmera.txt"
+mkdir       "$rooms/passadis/test"
+echo "🪴" > "$rooms/passadis/test/planta_palmera.txt"
 
 # Test > Terra remoguda
-mkdir       "$root/passadis/test/.terra_remoguda"
-echo "🪙" > "$root/passadis/test/.terra_remoguda/moneda_perduda.txt"
+mkdir       "$rooms/passadis/test/.terra_remoguda"
+echo "🪙" > "$rooms/passadis/test/.terra_remoguda/moneda_perduda.txt"
 
 
 ###########
 ## Cuina ##
 ###########
 
-mkdir "$root/cuina"
+mkdir "$rooms/cuina"
 
-echo "echo -n \"🕰 \";date -u +%I:%M:%S" > "$root/cuina/rellotge_de_paret.sh"
-chmod +x "$root/cuina/rellotge_de_paret.sh"
+echo "echo -n \"🕰 \";date -u +%I:%M:%S" > "$rooms/cuina/rellotge_de_paret.sh"
+chmod +x "$rooms/cuina/rellotge_de_paret.sh"
 
 # Nevera
-mkdir       "$root/cuina/nevera"
-echo "🥬" > "$root/cuina/nevera/enciam.txt"
-echo "🥕" > "$root/cuina/nevera/pastanaga.txt"
-echo "🍎" > "$root/cuina/nevera/poma.txt"
-echo "🍌" > "$root/cuina/nevera/platan.txt"
-echo "🍇" > "$root/cuina/nevera/raim.txt"
-echo "🍓" > "$root/cuina/nevera/maduixes.txt"
-echo "🍍" > "$root/cuina/nevera/pinya.txt"
-echo "🥒" > "$root/cuina/nevera/cogombre.txt"
-echo "🌶️" > "$root/cuina/nevera/pebrot.txt"
+mkdir       "$rooms/cuina/nevera"
+echo "🥬" > "$rooms/cuina/nevera/enciam.txt"
+echo "🥕" > "$rooms/cuina/nevera/pastanaga.txt"
+echo "🍎" > "$rooms/cuina/nevera/poma.txt"
+echo "🍌" > "$rooms/cuina/nevera/platan.txt"
+echo "🍇" > "$rooms/cuina/nevera/raim.txt"
+echo "🍓" > "$rooms/cuina/nevera/maduixes.txt"
+echo "🍍" > "$rooms/cuina/nevera/pinya.txt"
+echo "🥒" > "$rooms/cuina/nevera/cogombre.txt"
+echo "🌶️" > "$rooms/cuina/nevera/pebrot.txt"
 
 # Banc de cuina
-mkdir       "$root/cuina/banc_de_cuina"
+mkdir       "$rooms/cuina/banc_de_cuina"
 
 ## Pica
-mkdir       "$root/cuina/banc_de_cuina/pica"
+mkdir       "$rooms/cuina/banc_de_cuina/pica"
 
 
 
@@ -420,50 +472,50 @@ EOF
 
 
 
-echo "🥣" > "$root/cuina/banc_de_cuina/pica/bol_brut_0.txt"
-echo "🥣" > "$root/cuina/banc_de_cuina/pica/bol_brut_1.txt"
-echo "🥄" > "$root/cuina/banc_de_cuina/pica/cullera_bruta_0.txt"
-echo "🥄" > "$root/cuina/banc_de_cuina/pica/cullera_bruta_1.txt"
-echo "🥄" > "$root/cuina/banc_de_cuina/pica/cullera_bruta_2.txt"
-echo "🥄" > "$root/cuina/banc_de_cuina/pica/cullera_bruta_3.txt"
-echo "🥄" > "$root/cuina/banc_de_cuina/pica/cullera_bruta_4.txt"
-echo "🥄" > "$root/cuina/banc_de_cuina/pica/cullera_bruta_5.txt"
-echo "🥄" > "$root/cuina/banc_de_cuina/pica/cullera_bruta_6.txt"
-echo "🍴" > "$root/cuina/banc_de_cuina/pica/forquilla_bruta_0.txt"
-echo "🍴" > "$root/cuina/banc_de_cuina/pica/forquilla_bruta_1.txt"
-echo "🍴" > "$root/cuina/banc_de_cuina/pica/forquilla_bruta_2.txt"
-echo "🍴" > "$root/cuina/banc_de_cuina/pica/forquilla_bruta_3.txt"
-echo "🍴" > "$root/cuina/banc_de_cuina/pica/forquilla_bruta_4.txt"
-echo "🍴" > "$root/cuina/banc_de_cuina/pica/ganivet_brut_0.txt"
-echo "🍴" > "$root/cuina/banc_de_cuina/pica/ganivet_brut_1.txt"
-echo "🍴" > "$root/cuina/banc_de_cuina/pica/ganivet_brut_2.txt"
-echo "🍽" > "$root/cuina/banc_de_cuina/pica/plat_brut_0.txt"
-echo "🍽" > "$root/cuina/banc_de_cuina/pica/plat_brut_1.txt"
-echo "🍽" > "$root/cuina/banc_de_cuina/pica/plat_brut_2.txt"
-echo "🍽" > "$root/cuina/banc_de_cuina/pica/plat_brut_3.txt"
+echo "🥣" > "$rooms/cuina/banc_de_cuina/pica/bol_brut_0.txt"
+echo "🥣" > "$rooms/cuina/banc_de_cuina/pica/bol_brut_1.txt"
+echo "🥄" > "$rooms/cuina/banc_de_cuina/pica/cullera_bruta_0.txt"
+echo "🥄" > "$rooms/cuina/banc_de_cuina/pica/cullera_bruta_1.txt"
+echo "🥄" > "$rooms/cuina/banc_de_cuina/pica/cullera_bruta_2.txt"
+echo "🥄" > "$rooms/cuina/banc_de_cuina/pica/cullera_bruta_3.txt"
+echo "🥄" > "$rooms/cuina/banc_de_cuina/pica/cullera_bruta_4.txt"
+echo "🥄" > "$rooms/cuina/banc_de_cuina/pica/cullera_bruta_5.txt"
+echo "🥄" > "$rooms/cuina/banc_de_cuina/pica/cullera_bruta_6.txt"
+echo "🍴" > "$rooms/cuina/banc_de_cuina/pica/forquilla_bruta_0.txt"
+echo "🍴" > "$rooms/cuina/banc_de_cuina/pica/forquilla_bruta_1.txt"
+echo "🍴" > "$rooms/cuina/banc_de_cuina/pica/forquilla_bruta_2.txt"
+echo "🍴" > "$rooms/cuina/banc_de_cuina/pica/forquilla_bruta_3.txt"
+echo "🍴" > "$rooms/cuina/banc_de_cuina/pica/forquilla_bruta_4.txt"
+echo "🍴" > "$rooms/cuina/banc_de_cuina/pica/ganivet_brut_0.txt"
+echo "🍴" > "$rooms/cuina/banc_de_cuina/pica/ganivet_brut_1.txt"
+echo "🍴" > "$rooms/cuina/banc_de_cuina/pica/ganivet_brut_2.txt"
+echo "🍽" > "$rooms/cuina/banc_de_cuina/pica/plat_brut_0.txt"
+echo "🍽" > "$rooms/cuina/banc_de_cuina/pica/plat_brut_1.txt"
+echo "🍽" > "$rooms/cuina/banc_de_cuina/pica/plat_brut_2.txt"
+echo "🍽" > "$rooms/cuina/banc_de_cuina/pica/plat_brut_3.txt"
 
 ## Escorredora
-mkdir       "$root/cuina/banc_de_cuina/escorredora"
-echo "🥣" > "$root/cuina/banc_de_cuina/escorredora/bol_0.txt"
-echo "🥄" > "$root/cuina/banc_de_cuina/escorredora/cullera_0.txt"
-echo "🥄" > "$root/cuina/banc_de_cuina/escorredora/cullera_3.txt"
-echo "🥄" > "$root/cuina/banc_de_cuina/escorredora/cullera_4.txt"
-echo "🥄" > "$root/cuina/banc_de_cuina/escorredora/cullera_5.txt"
-echo "🍴" > "$root/cuina/banc_de_cuina/escorredora/forquilla_0.txt"
-echo "🍽" > "$root/cuina/banc_de_cuina/escorredora/plat_0.txt"
-echo "🍽" > "$root/cuina/banc_de_cuina/escorredora/plat_1.txt"
-echo "🍽" > "$root/cuina/banc_de_cuina/escorredora/plat_2.txt"
+mkdir       "$rooms/cuina/banc_de_cuina/escorredora"
+echo "🥣" > "$rooms/cuina/banc_de_cuina/escorredora/bol_0.txt"
+echo "🥄" > "$rooms/cuina/banc_de_cuina/escorredora/cullera_0.txt"
+echo "🥄" > "$rooms/cuina/banc_de_cuina/escorredora/cullera_3.txt"
+echo "🥄" > "$rooms/cuina/banc_de_cuina/escorredora/cullera_4.txt"
+echo "🥄" > "$rooms/cuina/banc_de_cuina/escorredora/cullera_5.txt"
+echo "🍴" > "$rooms/cuina/banc_de_cuina/escorredora/forquilla_0.txt"
+echo "🍽" > "$rooms/cuina/banc_de_cuina/escorredora/plat_0.txt"
+echo "🍽" > "$rooms/cuina/banc_de_cuina/escorredora/plat_1.txt"
+echo "🍽" > "$rooms/cuina/banc_de_cuina/escorredora/plat_2.txt"
 
 ## Cafetera
-mkdir "$root/cuina/banc_de_cuina/cafetera"
-mkdir "$root/cuina/banc_de_cuina/cafetera/safata"
-mkdir "$root/cuina/banc_de_cuina/cafetera/capsules"
+mkdir "$rooms/cuina/banc_de_cuina/cafetera"
+mkdir "$rooms/cuina/banc_de_cuina/cafetera/safata"
+mkdir "$rooms/cuina/banc_de_cuina/cafetera/capsules"
 for i in $(seq 32)
 do
-    echo "🟤"  > "$root/cuina/banc_de_cuina/cafetera/capsules/capsula_$i"
+    echo "🟤"  > "$rooms/cuina/banc_de_cuina/cafetera/capsules/capsula_$i"
 done
 
-cat <<'EOF' > "$root/cuina/banc_de_cuina/cafetera/boto.sh"
+cat <<'EOF' > "$rooms/cuina/banc_de_cuina/cafetera/boto.sh"
 #!/bin/bash
 
 last_capsule=$(ls capsules/capsula_*.txt 2>/dev/null | tail -n 1)
@@ -515,8 +567,8 @@ fi
 EOF
 
 # Microones
-mkdir "$root/cuina/banc_de_cuina/microones/"
-cat <<'EOF' > "$root/cuina/banc_de_cuina/microones/boto.sh"
+mkdir "$rooms/cuina/banc_de_cuina/microones/"
+cat <<'EOF' > "$rooms/cuina/banc_de_cuina/microones/boto.sh"
 #!/bin/bash
 
 path="./interior"
@@ -536,29 +588,22 @@ for item in "$path"/*; do
   mv "$item" "$path/$file"
 done
 EOF
-chmod +x "$root/cuina/banc_de_cuina/microones/boto.sh"
-
-# mkdir "$root/cuina/cuina"
-# mkdir "$root/cuina/armari"
-# mkdir "$root/cuina/calaix"
-# mkdir "$root/cuina/rentaplats"
-# mkdir "$root/cuina/taula"
-
+chmod +x "$rooms/cuina/banc_de_cuina/microones/boto.sh"
 
 
 ############
 ## Portes ##
 ############
 
-ln -s "rebedor/"      "$root/porta_principal"
+ln -s "./$rooms_dir/rebedor/"   "$root/casa"
 
 # Rebedor
-ln -s ".."            "$root/rebedor/porta_principal"
-ln -s "../passadis/"  "$root/rebedor/porta_al_passadis"
+ln -s "../.."                   "$rooms/rebedor/sortida"
+ln -s "../passadis/"            "$rooms/rebedor/passadis"
 
 # Passadís
-ln -s "../rebedor/"   "$root/passadis/porta_al_rebedor"
-ln -s "../cuina/"     "$root/passadis/porta_a_la_cuina"
+ln -s "../rebedor/"             "$rooms/passadis/rebedor"
+ln -s "../cuina/"               "$rooms/passadis/cuina"
 
 # Cuina
-ln -s "../passadis/"  "$root/cuina/porta_al_passadis"
+ln -s "../passadis/"            "$rooms/cuina/passadis"
