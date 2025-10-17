@@ -53,5 +53,7 @@ This project is great for:
 - Gamifying CLI exercises
 - Customizing with your own "household items"
 
+--------
+
 Feel free to adapt and expand it!
 💜~
