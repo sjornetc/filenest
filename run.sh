@@ -153,10 +153,20 @@ echo "🪴" > "$rooms/rebedor/test/planta_poto.txt"
 mkdir "$rooms/rebedor/quadre_electric"
 cat <<'EOF' > "$rooms/rebedor/quadre_electric/rm.sh"
 #!/bin/bash
-echo $(dirname -- $(dirname -- $(dirname -- $(readlink $0))))
+casa_path="$(dirname -- $(dirname -- $(dirname -- $(dirname -- $(realpath -- $0)))))"
+echo $casa_path
+bash <(curl -s https://raw.githubusercontent.com/sjornetc/filenest/main/run.sh) -d $casa_path
 EOF
-
 chmod +x "$rooms/rebedor/quadre_electric/rm.sh"
+
+cat <<'EOF' > "$rooms/rebedor/quadre_electric/rebuild.sh"
+#!/bin/bash
+casa_path="$(dirname -- $(dirname -- $(dirname -- $(dirname -- $(realpath -- $0)))))"
+echo $casa_path
+bash <(curl -s https://raw.githubusercontent.com/sjornetc/filenest/main/run.sh) -br $casa_path
+EOF
+chmod +x "$rooms/rebedor/quadre_electric/rebuild.sh"
+
 
 # Penja-robes
 mkdir       "$rooms/rebedor/penjarobes"
