@@ -83,13 +83,16 @@ rooms="$root/$rooms_dir/"
 if "$delete"; then
   dest=$(readlink -f -- "$root/casa" 2>/dev/null) || dest=""
   prefix="$(realpath -- "$root")/"
-  if [[ -L "$root/casa" \
-    &&  -n "$dest" \
-    &&  "$dest" == "$prefix"* \
-    &&  "${dest#"$prefix"}" =~ ^[^/]+/rebedor/?$ ]]; then
-      rm -rf -- "$(dirname -- "$dest")"
+#  if [[ -L "$root/casa" \
+#    &&  -n "$dest" \
+#    &&  "$dest" == "$prefix"* \
+#    &&  "${dest#"$prefix"}" =~ ^[^/]+/rebedor/?$ ]]; then
+#      rm -rf -- "$(dirname -- "$dest")"
+#      rm -f -- "$root/casa"
+#      exit 0
+  if [[ -L "${root}/casa" || -d "${root}/${rooms_dir}" ]]; then
+      rm -rf -- "${root}/${rooms_dir}"
       rm -f -- "$root/casa"
-      exit 0
   else
       echo "filenest: No valid 'casa' was found in '$root'." >&2
       exit 1
