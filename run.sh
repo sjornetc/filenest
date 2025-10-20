@@ -94,6 +94,7 @@ if "$delete"; then
   if [[ -L "${root}/${casa}" || -d "${root}/${rooms_dir}" ]]; then
       rm -rf -- "${root}/${rooms_dir}"
       rm -f -- "${root}/${casa}"
+      exit
   else
       echo "filenest: No valid 'casa' was found in '$root'." >&2
       exit 1
