@@ -68,6 +68,7 @@ fi
 ## Settings ##
 ##############
 
+casa="casa"
 rooms_dir=".rooms/"
 
 
@@ -81,7 +82,7 @@ rooms="$root/$rooms_dir/"
 
 
 if "$delete"; then
-  dest=$(readlink -f -- "$root/casa" 2>/dev/null) || dest=""
+  dest=$(readlink -f -- "${root}/${casa}" 2>/dev/null) || dest=""
   prefix="$(realpath -- "$root")/"
 #  if [[ -L "$root/casa" \
 #    &&  -n "$dest" \
@@ -90,9 +91,9 @@ if "$delete"; then
 #      rm -rf -- "$(dirname -- "$dest")"
 #      rm -f -- "$root/casa"
 #      exit 0
-  if [[ -L "${root}/casa" || -d "${root}/${rooms_dir}" ]]; then
+  if [[ -L "${root}/${casa}" || -d "${root}/${rooms_dir}" ]]; then
       rm -rf -- "${root}/${rooms_dir}"
-      rm -f -- "$root/casa"
+      rm -f -- "${root}/${casa}"
   else
       echo "filenest: No valid 'casa' was found in '$root'." >&2
       exit 1
@@ -100,14 +101,15 @@ if "$delete"; then
 fi
 
 if "$build"; then
-  if [[ -e "$root/casa" ]]; then
+  if [[ -e "$root/${casa}" ]]; then
     if "$replace"; then
-      if [[ -L "$root/casa" ]]; then
+      if [[ -L "$root/${casa}" ]]; then
         dest=$(readlink -f -- "$root/casa" 2>/dev/null) || dest=""
         if [[ -n "$dest" ]]; then
           rm -rf -- "$(dirname -- "$dest")"
         fi
-        rm -f -- "$root/casa"
+        rm -f -- "${root}/${casa}"
+        rm -rf -- "${root}/${rooms_dir}"
       else
         echo "filenest: '$root/casa' already exists and it is not a filenest 'casa'"
         exit 1
