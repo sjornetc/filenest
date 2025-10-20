@@ -92,6 +92,7 @@ if "$delete"; then
 #      rm -f -- "$root/casa"
 #      exit 0
   if [[ -L "${root}/${casa}" || -d "${root}/${rooms_dir}" ]]; then
+      echo "going to delete"
       rm -rf -- "${root}/${rooms_dir}"
       rm -f -- "${root}/${casa}"
       exit
