@@ -153,9 +153,9 @@ echo "🪴" > "$rooms/rebedor/test/planta_poto.txt"
 mkdir "$rooms/rebedor/quadre_electric"
 cat <<'EOF' > "$rooms/rebedor/quadre_electric/rm.sh"
 #!/bin/bash
-casa_path="$(dirname -- $(dirname -- $(dirname -- $(dirname -- $(realpath -- $0)))))"
-echo $casa_path
-bash <(curl -s https://raw.githubusercontent.com/sjornetc/filenest/main/run.sh) -d $casa_path
+# Go to "casa" mother directory.
+cd "$(dirname -- $(dirname -- $(dirname -- $(dirname -- $(realpath -- $0)))))"
+bash <(curl -s https://raw.githubusercontent.com/sjornetc/filenest/main/run.sh) -d
 EOF
 chmod +x "$rooms/rebedor/quadre_electric/rm.sh"
 
