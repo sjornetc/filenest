@@ -433,7 +433,7 @@ mkdir       "$rooms/cuina/banc_de_cuina/pica"
 
 
 
-cat <<"EOF" > "a.sh"
+cat <<"EOF" > "$rooms/cuina/banc_de_cuina/pica/aixeta.sh"
 #!/bin/bash
 
 mostrar_ajuda() {
